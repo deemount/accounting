@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
-   steps:
+    steps:
     
       - name: Check Out Repo
         # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
