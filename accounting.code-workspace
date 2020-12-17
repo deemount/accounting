@@ -1,0 +1,46 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		/*"terminal.integrated.fontFamily": "Menlo for Powerline",*/
+		"workbench.sideBar.location": "left",
+		"workbench.colorCustomizations": {
+			"window.activeBorder": "#31a11b",
+			"titleBar.activeBackground": "#31a11b",
+			"titleBar.inactiveBackground": "#31a11b99",
+			"titleBar.inactiveForeground": "#e7e7e799",
+			"terminalCursor.foreground": "#00ffaa",
+			"activityBar.activeBackground": "#3ecd22",
+			"activityBar.activeBorder": "#5b71e4",
+			"activityBar.background": "#3ecd22",
+			"activityBar.foreground": "#15202b",
+			"activityBar.inactiveForeground": "#15202b99",
+			"activityBarBadge.background": "#5b71e4",
+			"activityBarBadge.foreground": "#e7e7e7",
+			"statusBar.background": "#31a11b",
+			"statusBar.foreground": "#e7e7e7",
+			"statusBarItem.hoverBackground": "#3ecd22",
+			"titleBar.activeForeground": "#e7e7e7"
+		},
+		"terminal.integrated.cursorBlinking": true,
+		"material-icon-theme.folders.color": "#90a4ae",
+		"go.useLanguageServer": true,
+		"go.alternateTools": {
+			"gopls": "gopls"
+		},
+		"go.autocompleteUnimportedPackages": true,
+		"[go]": {
+			"editor.formatOnSave": true,
+			"editor.codeActionsOnSave": {
+				"source.organizeImports": true
+			}
+		},
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": []
+	}
+}
