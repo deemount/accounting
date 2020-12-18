@@ -256,9 +256,9 @@ func MockRewrite2(o string, q []map[string]interface{}, i int) {
 
 }
 
-// TestMakeMaps
+// TestForLoopWithOrderTypes
 // cmd: go test -v accounting_test.go -run TestForLoop
-func TestForLoop(t *testing.T) {
+func TestForLoopWithOrderTypes(t *testing.T) {
 
 	t.Run("Results", func(t *testing.T) {
 
