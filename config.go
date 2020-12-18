@@ -1,5 +1,7 @@
 package accounting
 
+import "gorm.io/gorm"
+
 // DB holds db configuration values
 type DB struct {
 	Driver        string
@@ -12,5 +14,5 @@ type DB struct {
 	TblPrefix     string
 	Name          string
 	SingularTable bool
-	LogMode       bool
+	Conf          *gorm.Config
 }

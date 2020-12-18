@@ -3,6 +3,8 @@ package driver
 import (
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
+	"gorm.io/gorm/schema"
 
 	"github.com/deemount/accounting"
 	"github.com/deemount/accounting/driver/models"
@@ -33,28 +35,27 @@ func (db *DataService) Connect() (*DataService, error) {
 
 	/*db.Config.Host, db.Config.Port, db.Config.User, db.Config.Name, db.Config.SSL, db.Config.Schema, db.Config.PW)*/
 
-	db.ORM, err = gorm.Open(postgres.New(postgres.Config{
-		DSN:                  "user=salvo password=pdfx34 dbname=accounting port=9920 sslmode=disable TimeZone=Asia/Shanghai",
-		PreferSimpleProtocol: true, // disables implicit prepared statement usage
-	}), &gorm.Config{})
+	db.ORM, err = gorm.Open(postgres.New(
+		postgres.Config{
+			DSN:                  "user=salvo password=pdfx34 dbname=accounting port=9920 sslmode=disable TimeZone=Europe/Berlin",
+			PreferSimpleProtocol: true, // disables implicit prepared statement usage
+		}), db.config())
 
-	//db.config()
 	db.migrate()
-
-	// gorm.DefaultTableNameHandler = func(sql *gorm.DB, defaultTableName string) string {
-	// 	return db.Config.TblPrefix + "_" + defaultTableName
-	// }
 
 	return db, err
 
 }
 
-func (db *DataService) config() {
-
-	// Do not automatically convert to plural table names
-	//db.ORM.SingularTable(db.Config.SingularTable)
-	//db.ORM.LogMode(db.Config.LogMode)
-
+func (db *DataService) config() *gorm.Config {
+	return &gorm.Config{
+		// GORM defined log levels: Silent, Error, Warn, Info
+		Logger: logger.Default.LogMode(logger.Silent),
+		NamingStrategy: schema.NamingStrategy{
+			TablePrefix:   "acc_", // table name prefix
+			SingularTable: true,   // use singular table name
+		},
+	}
 }
 
 func (db *DataService) migrate() {

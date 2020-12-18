@@ -8,6 +8,7 @@ import (
 	"github.com/imdario/mergo"
 
 	"github.com/deemount/accounting/asserts"
+	"github.com/deemount/accounting/driver"
 )
 
 // ExchangeOrder ...
@@ -28,6 +29,12 @@ type Accounting struct {
 
 // New ...
 func New() Acc {
+	db := driver.NewDataService(*driver.DataService.Config)
+	idle, err := db.Connect()
+	if err != nil {
+		log.Printf("Could not open database connection: %v", err)
+	}
+	log.Print(idle)
 	return &Accounting{}
 }
 
