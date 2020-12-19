@@ -4,23 +4,24 @@ import (
 	"encoding/json"
 	"log"
 
-	"github.com/google/uuid"
 	"github.com/imdario/mergo"
 
+	"github.com/deemount/accounting/app"
 	"github.com/deemount/accounting/asserts"
 	"github.com/deemount/accounting/driver"
+	"github.com/deemount/accounting/driver/models"
 )
 
-// ExchangeOrder ...
-type ExchangeOrder struct {
-	ID         uuid.UUID `json:"id"`
-	CustomerID int64     `json:"customer_id"`
-	Type       string    `json:"type"`
+// Service is a struct
+type Service struct {
+	App app.App
 }
+
+var service = Service{}
 
 // Acc ...
 type Acc interface {
-	Create(c []ExchangeOrder) error
+	Create(c []models.ExchangeOrder) error
 }
 
 // Accounting ...
@@ -29,17 +30,23 @@ type Accounting struct {
 
 // New ...
 func New() Acc {
-	db := driver.NewDataService(*driver.DataService.Config)
+	return &Accounting{}
+}
+
+// Init ...
+func Init() {
+
+	db := driver.NewDataService(*service.App.DB.Config)
 	idle, err := db.Connect()
 	if err != nil {
 		log.Printf("Could not open database connection: %v", err)
 	}
 	log.Print(idle)
-	return &Accounting{}
+
 }
 
 // Create ...
-func (a *Accounting) Create(c []ExchangeOrder) error {
+func (a *Accounting) Create(c []models.ExchangeOrder) error {
 
 	// assign error, created, index, blocks, query
 	var err error

@@ -1,4 +1,4 @@
-package accounting
+package config
 
 import "gorm.io/gorm"
 

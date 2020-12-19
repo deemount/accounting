@@ -155,6 +155,44 @@ func TestMakeMaps(t *testing.T) {
 
 }
 
+// TestAppendEmptyMaps
+// cmd: go test -v accounting_test.go -run TestAppendStructSlice
+func TestAppendStructSlice(t *testing.T) {
+
+	t.Run("Show", func(t *testing.T) {
+
+		var c []TestExchangeOrder
+
+		c = []TestExchangeOrder{
+			{
+				ID:         uuid.New(),
+				CustomerID: 1,
+				Type:       "buy",
+			},
+			{
+				ID:         uuid.New(),
+				CustomerID: 2,
+				Type:       "buy",
+			},
+		}
+
+		model := make([][]TestExchangeOrder, 8)
+
+		j := 0
+		for i := 0; i < 8; i++ {
+			if i%4 == 0 {
+				model[i] = append(model[i], c[j])
+				j++
+			}
+		}
+
+		t.Logf("%d", len(model))
+		t.Logf("%v", model)
+
+	})
+
+}
+
 // TestLoopMap
 // cmd: go test -v accounting_test.go -run TestLoopMap
 func TestLoopMap(t *testing.T) {

@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
-	"github.com/deemount/accounting"
+	"github.com/deemount/accounting/config"
 	"github.com/deemount/accounting/driver/models"
 )
 
@@ -17,14 +17,14 @@ type DataServiceRepository interface {
 
 // DataService is a struct
 type DataService struct {
-	Config *accounting.DB
+	Config *config.DB
 	ORM    *gorm.DB
 }
 
 // NewDataService is a constructor
-func NewDataService(config accounting.DB) DataServiceRepository {
+func NewDataService(c config.DB) DataServiceRepository {
 	return &DataService{
-		Config: &config,
+		Config: &c,
 	}
 }
 
