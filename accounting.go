@@ -41,7 +41,7 @@ func Init() {
 	if err != nil {
 		log.Printf("Could not open database connection: %v", err)
 	}
-	log.Print(idle)
+	service.App.DB = idle
 
 }
 

@@ -10,10 +10,12 @@ type OrderTypes int64
 
 const (
 	// Withdrawal is 0
+	// represents the cash withdrawal to consumer
 	Withdrawal OrderTypes = iota
 	// Buy is 1
 	Buy
 	// Spread is 2
+	// represents the difference between buy (offer) and market price (bid)
 	Spread
 	// Fee is 3
 	Fee
@@ -60,19 +62,14 @@ func (o OrderTypes) String() string {
 		"spread",
 		"fee"}
 
-	// → `o`: It's one of the
-	// values of OrderTypes constants.
-	// If the constant is withdrawal,
-	// then day is 0.
-	//
-	// prevent panicking in case of
-	// `o` is out of range of OrderTypes
+	// one of the values of OrderTypes constants.
+	// if the constant is withdrawal, then order is 0.
+	// prevent panicking in case of `o` is out of range of OrderTypes
 	if o < Withdrawal || o > Fee {
 		return "Unknown"
 	}
 
 	// return the name of a OrderType
-	// constant from the names array
-	// above.
+	// constant from the names array above.
 	return names[o]
 }

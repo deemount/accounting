@@ -4,19 +4,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"reflect"
+	"strconv"
 	"testing"
+	"unsafe"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
-
-// ExchangeOrder ...
-type TestExchangeOrder struct {
-	ID         uuid.UUID `json:"id"`
-	CustomerID int64     `json:"customer_id"`
-	Type       string    `json:"type"`
-}
 
 type TestOrderTypes int64
 
@@ -27,7 +23,7 @@ const (
 	TestFee
 )
 
-// String ...
+// String return name of typed constants by given integer (0,1,2,3,4)
 func (testo TestOrderTypes) String() string {
 
 	names := [...]string{
@@ -43,6 +39,74 @@ func (testo TestOrderTypes) String() string {
 	return names[testo]
 }
 
+/**/
+
+// TestExchangeOrder ...
+type TestExchangeOrder struct {
+	ID         uuid.UUID `json:"id"`
+	CustomerID int64     `json:"customer_id"`
+	Type       string    `json:"type"`
+	Asset      string    `json:"asset"`
+}
+
+// Private
+// otype: is string value
+// which: is integer value calculated with modulo and represents\nthe value of a typed constant
+
+var (
+
+	//
+	testQueryMap []map[string]interface{}
+
+	// is a string array, with the capacity of 5, holding suffixes (Bytes, KB, MB, GB, TB) for given calculated values
+	suffixes [5]string
+
+	// is number of wanted testFixedNumberOfAdditionalSlices for each map in map slice
+	testFixedNumberOfAdditionalSlices = 4
+
+	// filled single struct for testing
+	testDataStruct = TestExchangeOrder{
+		ID:         uuid.New(),
+		CustomerID: 1,
+		Type:       "buy",
+		Asset:      "EUR",
+	}
+
+	// filled struct slice for testing
+	testDataStructSlice = []TestExchangeOrder{
+		{
+			ID:         uuid.New(),
+			CustomerID: 1,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 2,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 3,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 4,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+	}
+
+	//
+	testNumberOfSlicesInTestStruct = len(testDataStructSlice)
+
+	// is number of all maps by multiplication of testNumberOfSlicesInTestStruct and testFixedNumberOfAdditionalSlices
+	testCreatedSlices = testNumberOfSlicesInTestStruct * testFixedNumberOfAdditionalSlices
+)
+
 // TestOrderTypesValues
 // cmd: go test -v accounting_test.go -run TestOrderTypesValues
 func TestOrderTypesValues(t *testing.T) {
@@ -57,35 +121,33 @@ func TestOrderTypesValues(t *testing.T) {
 	t.Log("\n\n")
 
 	//
-	t.Run("TypeOf", func(t *testing.T) {
-
-		// rt1 := reflect.TypeOf(TestOrderTypes(1))
-		// rt2 := reflect.TypeOf(int64(1))
-
-		// assert.Equal(t, rt1, rt2, "is not equal, because TestOrderTypes is a unsigned pointer and differs to unsigned integer")
-
-	})
-	t.Log("\n\n")
-
-	//
 	t.Run("PointerTo", func(t *testing.T) {
 
 		rt3 := reflect.TypeOf(TestOrderTypes(0))
 		rt4 := reflect.TypeOf(new(TestOrderTypes))
 
-		assert.Equal(t, reflect.PtrTo(rt3), rt4, fmt.Sprintf("%s", "is equal, because both have same type of pointer"))
-
+		ok := assert.Equal(t, reflect.PtrTo(rt3), rt4)
+		if ok {
+			t.Log("is equal, because both have same type of pointer")
+		}
 	})
 	t.Log("\n\n")
 
 	//
 	t.Run("ValueOf", func(t *testing.T) {
 
-		// rt5 := reflect.ValueOf(TestOrderTypes(1))
-		// rt6 := reflect.ValueOf(int64(1))
+		rt5 := reflect.ValueOf(TestOrderTypes(1))
+		rt6 := reflect.ValueOf(int64(1))
 
-		// assert.Equal(t, rt5, rt6, "is not equal")
-		// assert.Equal(t, reflect.Kind(TestOrderTypes(1)), reflect.Kind(int64(1)), "is equal")
+		ok1 := assert.Equal(t, rt5, rt6)
+		if !ok1 {
+			t.Log("reflect.ValueOf(TestOrderTypes(1)) and reflect.ValueOf(int64(1)) is not equal")
+		}
+
+		ok2 := assert.Equal(t, reflect.Kind(TestOrderTypes(1)), reflect.Kind(int64(1)))
+		if ok2 {
+			t.Log("reflect.Kind(TestOrderTypes(1)) and reflect.Kind(int64(1)) is equal")
+		}
 
 	})
 
@@ -100,13 +162,7 @@ func TestStruct2Map(t *testing.T) {
 
 		q1 := make(map[string]interface{}, 1)
 
-		c1 := &TestExchangeOrder{
-			ID:         uuid.New(),
-			CustomerID: 1,
-			Type:       "buy",
-		}
-
-		bytes, _ := json.Marshal(&c1)
+		bytes, _ := json.Marshal(&testDataStruct)
 		json.Unmarshal(bytes, &q1)
 
 		t.Logf("Single: %+v", q1)
@@ -117,22 +173,9 @@ func TestStruct2Map(t *testing.T) {
 	//
 	t.Run("Many", func(t *testing.T) {
 
-		q2 := make([]map[string]interface{}, 2)
+		q2 := make([]map[string]interface{}, testNumberOfSlicesInTestStruct)
 
-		c2 := &[]TestExchangeOrder{
-			{
-				ID:         uuid.New(),
-				CustomerID: 1,
-				Type:       "buy",
-			},
-			{
-				ID:         uuid.New(),
-				CustomerID: 2,
-				Type:       "buy",
-			},
-		}
-
-		bytes, _ := json.Marshal(&c2)
+		bytes, _ := json.Marshal(&testDataStructSlice)
 		json.Unmarshal(bytes, &q2)
 
 		t.Logf("Many: %v", q2)
@@ -147,121 +190,123 @@ func TestMakeMaps(t *testing.T) {
 
 	t.Run("Many", func(t *testing.T) {
 
-		num := 4
-		emptyMaps := make([]map[string]interface{}, num)
+		emptyMaps := make([]map[string]interface{}, testNumberOfSlicesInTestStruct)
 		t.Logf("%v", emptyMaps)
 
 	})
 
 }
 
-// TestAppendEmptyMaps
+// TestAppendStructSlice
 // cmd: go test -v accounting_test.go -run TestAppendStructSlice
 func TestAppendStructSlice(t *testing.T) {
 
 	t.Run("Show", func(t *testing.T) {
 
-		var c []TestExchangeOrder
-
-		c = []TestExchangeOrder{
-			{
-				ID:         uuid.New(),
-				CustomerID: 1,
-				Type:       "buy",
-			},
-			{
-				ID:         uuid.New(),
-				CustomerID: 2,
-				Type:       "buy",
-			},
-		}
-
-		model := make([][]TestExchangeOrder, 8)
-
-		j := 0
-		for i := 0; i < 8; i++ {
+		// is the position of current map, starting at 0
+		testZeroIntegerIndex := 0
+		result := make([]TestExchangeOrder, testCreatedSlices)
+		for i := 0; i < testCreatedSlices; i++ {
 			if i%4 == 0 {
-				model[i] = append(model[i], c[j])
-				j++
+				result[i] = testDataStructSlice[testZeroIntegerIndex]
+				testZeroIntegerIndex++
 			}
 		}
 
-		t.Logf("%d", len(model))
-		t.Logf("%v", model)
+		showSize(result)
+		t.Logf("%d:%d", len(result), cap(result))
+		b, _ := json.MarshalIndent(result, " ", "   ")
+		t.Logf("%v", string(b))
 
 	})
 
 }
 
-// TestLoopMap
-// cmd: go test -v accounting_test.go -run TestLoopMap
-func TestLoopMap(t *testing.T) {
+// TestAppendMapSlice
+// cmd: go test -v accounting_test.go -run TestAppendMapSlice
+func TestAppendMapSlice(t *testing.T) {
+
+	t.Run("Show", func(t *testing.T) {
+
+		b, _ := json.Marshal(&testDataStructSlice)
+		json.Unmarshal(b, &testQueryMap)
+
+		// is the position of current map, starting at 0
+		testZeroIntegerIndex := 0
+		result := make([]map[string]interface{}, testCreatedSlices)
+		for i := 0; i < testCreatedSlices; i++ {
+			if i%testFixedNumberOfAdditionalSlices == 0 {
+				result[i] = testQueryMap[testZeroIntegerIndex]
+				testZeroIntegerIndex++
+			}
+		}
+
+		showSize(result)
+		t.Logf("%d:%d", len(result), cap(result))
+		b1, _ := json.MarshalIndent(result, " ", "   ")
+		t.Logf("%v", string(b1))
+
+	})
+
+}
+
+// TestAppendRewriteMapSlice
+// cmd: go test -v accounting_test.go -run TestAppendRewriteMapSlice
+func TestAppendRewriteMapSlice(t *testing.T) {
 
 	t.Run("Slice", func(t *testing.T) {
 
-		var created, blocks, index int
-		var query []map[string]interface{}
-		//var wrap []map[string]interface{}
+		b, _ := json.Marshal(&testDataStructSlice)
+		json.Unmarshal(b, &testQueryMap)
 
-		index = 0
-		blocks = 4
-
-		var c = &[]TestExchangeOrder{
-			{
-				ID:         uuid.New(),
-				CustomerID: 1,
-				Type:       "buy",
-			},
-			{
-				ID:         uuid.New(),
-				CustomerID: 2,
-				Type:       "buy",
-			},
-		}
-
-		bytes, _ := json.Marshal(&c)
-		json.Unmarshal(bytes, &query)
-
-		rows := len(query)
-		created = rows * blocks
-		t.Logf("%v", query)
-
-		result := make([]map[string]interface{}, created)
-
-		t.Log("index:\nis the position of current map, starting at 0\n")
-		t.Log("blocks:\nis number of wanted blocks for each map in map slice\n")
-		t.Log("created:\nis number of all maps by multiplication of rows and blocks\n")
-		t.Log("otype:\nis string value\n")
-		t.Log("which:\nis integer value calculated with modulo and represents\nthe value of a typed constant\n")
-		for index < created {
-
-			which := index % blocks
-			otype := TestOrderTypes(which).String()
-
-			//t.Logf("%d (of %d) mod %d = %s(%d)", index, created, blocks, otype, which)
-
-			MockRewrite(otype, result, query, index)
-
+		// is the position of current map, starting at 0
+		testZeroIntegerIndex := 0
+		result := make([]map[string]interface{}, testCreatedSlices)
+		for i := 0; i < testCreatedSlices; i++ {
+			which := i % testFixedNumberOfAdditionalSlices
 			if which == 0 {
-				which++
+				result[i] = testQueryMap[testZeroIntegerIndex]
+				result[i]["type"] = TestOrderTypes(which).String()
+				testZeroIntegerIndex++
+			} else {
+				result[i] = map[string]interface{}{
+					"customer_id": testQueryMap[testZeroIntegerIndex-1]["customer_id"],
+					"id":          testQueryMap[testZeroIntegerIndex-1]["id"],
+					"type":        TestOrderTypes(which).String(),
+					"asset":       "EUR",
+				}
 			}
-
-			index++
-
+			t.Logf("%d of %d (l:%d)", i, testCreatedSlices, len(result[i]))
+			showSize(result[i])
 		}
 
 	})
+
+}
+
+func TestAll(t *testing.T) {
+
+	// is the position of current map, starting at 0
+	testZeroIntegerIndex := 0
+	for testZeroIntegerIndex < testCreatedSlices {
+		which := testZeroIntegerIndex % testFixedNumberOfAdditionalSlices
+		//otype := TestOrderTypes(which).String()
+		//t.Logf("%d (of %d) mod %d = %s(%d)", testZeroIntegerIndex, testCreatedSlices, testFixedNumberOfAdditionalSlices, otype, which)
+		//MockRewrite(otype, result, testQueryMap, testZeroIntegerIndex)
+		if which == 0 {
+			which++
+		}
+		testZeroIntegerIndex++
+	}
 
 }
 
 //
 func MockRewrite(o string, r []map[string]interface{}, q []map[string]interface{}, i int) {
 
-	log.Printf("%v", r)
+	for k, v := range r[i] {
 
-	for k, v := range r {
-
-		log.Printf("INDEX(%d):OPTYPE(%s):KEY(%d):MAP(%v)\n", i, o, k, v)
+		log.Printf("testZeroIntegerIndex(%d):OPTYPE(%s):KEY(%s):VALUE(%v)", i, o, k, v)
 
 		// for str, val := range v {
 
@@ -278,48 +323,183 @@ func MockRewrite(o string, r []map[string]interface{}, q []map[string]interface{
 
 		//}
 
-		log.Printf("\n")
-
-	}
-
-}
-
-func MockRewrite2(o string, q []map[string]interface{}, i int) {
-
-	for k, v := range q[i] {
-
-		log.Printf("%s:%s:%v", o, k, v)
-
 	}
 
 }
 
 // TestForLoopWithOrderTypes
-// cmd: go test -v accounting_test.go -run TestForLoop
+// cmd: go test -v accounting_test.go -run TestForLoopWithOrderTypes
 func TestForLoopWithOrderTypes(t *testing.T) {
 
 	t.Run("Results", func(t *testing.T) {
 
-		rows := 3
-		index := 0
-		blocks := 4
-		created := rows * blocks
+		// is the position of current map, starting at 0
+		testZeroIntegerIndex := 0
+		for testZeroIntegerIndex < testCreatedSlices {
 
-		for index < created {
-
-			which := index % blocks
-			t.Logf("%d:%s", index, TestOrderTypes(which).String())
+			which := testZeroIntegerIndex % testFixedNumberOfAdditionalSlices
+			t.Logf("%d:%s", testZeroIntegerIndex, TestOrderTypes(which).String())
 
 			if which == 0 {
 				which++
 			}
 
-			index++
+			testZeroIntegerIndex++
 
 		}
 
 	})
 
+}
+
+/*
+
+Run all benchmark tests without the other ttesting functions with this cmd:
+go test -run=^$ -bench=.
+
+*/
+
+// BenchmarkAppendStructSlice1
+func BenchmarkAppendStructSlice1(b *testing.B) {
+	var testDataStructSlice1 = []TestExchangeOrder{
+		{
+			ID:         uuid.New(),
+			CustomerID: 1,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		testZeroIntegerIndex1 := 0
+		result1 := make([]TestExchangeOrder, 4)
+		for i := 0; i < 4; i++ {
+			if i%4 == 0 {
+				result1[i] = testDataStructSlice1[testZeroIntegerIndex1]
+				testZeroIntegerIndex1++
+			}
+		}
+	}
+}
+
+// BenchmarkAppendStructSlice16
+func BenchmarkAppendStructSlice16(b *testing.B) {
+	var testDataStructSlice1 = []TestExchangeOrder{
+		{
+			ID:         uuid.New(),
+			CustomerID: 1,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 2,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 3,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 4,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		testZeroIntegerIndex1 := 0
+		result1 := make([]TestExchangeOrder, 16)
+		for i := 0; i < 16; i++ {
+			if i%4 == 0 {
+				result1[i] = testDataStructSlice1[testZeroIntegerIndex1]
+				testZeroIntegerIndex1++
+			}
+		}
+	}
+}
+
+// BenchmarkAppendStructSlice16
+func BenchmarkAppendStructSlice32(b *testing.B) {
+	var testDataStructSlice1 = []TestExchangeOrder{
+		{
+			ID:         uuid.New(),
+			CustomerID: 1,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 2,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 3,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 4,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 5,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 6,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 7,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 8,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+	}
+	b.ResetTimer()
+	for n := 0; n < b.N; n++ {
+		testZeroIntegerIndex1 := 0
+		result1 := make([]TestExchangeOrder, 32)
+		for i := 0; i < 32; i++ {
+			if i%4 == 0 {
+				result1[i] = testDataStructSlice1[testZeroIntegerIndex1]
+				testZeroIntegerIndex1++
+			}
+		}
+	}
+}
+
+// getSliceHeader
+// inspecting the header values of each slice
+func getMapSliceHeader(slice *[]map[string]interface{}) string {
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(slice))
+	return fmt.Sprintf("%+v", sh)
+}
+
+// getSliceHeader
+// inspecting the header values of each slice
+func getSliceHeader(slice *map[string]interface{}) string {
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(slice))
+	return fmt.Sprintf("%+v", sh)
 }
 
 // getSize
@@ -353,6 +533,7 @@ func getSize(v interface{}) int {
 		for i := range keys {
 			size += getSize(keys[i].Interface()) + getSize(s.MapIndex(keys[i]).Interface())
 		}
+
 	case reflect.String:
 		size += reflect.ValueOf(v).Len()
 
@@ -366,4 +547,34 @@ func getSize(v interface{}) int {
 
 	}
 	return size
+}
+
+func showSize(result interface{}) {
+
+	suffixes[0] = "Bytes"
+	suffixes[1] = "KB"
+	suffixes[2] = "MB"
+	suffixes[3] = "GB"
+	suffixes[4] = "TB"
+
+	size, _ := strconv.ParseFloat(strconv.Itoa(getSize(result)), 64)
+	base := math.Log(size) / math.Log(1024)
+	getSize := Round(math.Pow(1024, base-math.Floor(base)), .5, 2)
+	getSuffix := suffixes[int(math.Floor(base))]
+	log.Printf(strconv.FormatFloat(getSize, 'f', -1, 64) + " " + string(getSuffix))
+
+}
+
+func Round(val float64, roundOn float64, places int) (newVal float64) {
+	var round float64
+	pow := math.Pow(10, float64(places))
+	digit := pow * val
+	_, div := math.Modf(digit)
+	if div >= roundOn {
+		round = math.Ceil(digit)
+	} else {
+		round = math.Floor(digit)
+	}
+	newVal = round / pow
+	return
 }
