@@ -24,7 +24,7 @@ const (
 // Value - Implementation of valuer for database/sql
 func (o OrderTypes) Value() (driver.Value, error) {
 	// value needs to be a base driver.Value type
-	// such as bool.
+	// such as int64.
 	return int64(o), nil
 }
 
