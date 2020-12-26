@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestOrderTypes ...
 type TestOrderTypes int64
 
 const (
@@ -63,7 +64,7 @@ func TestOrderTypesValues(t *testing.T) {
 	t.Log("\n\n")
 
 	// reflect value of order types
-	// first use case fails as given example for better understanding
+	// use case fails as given example for better understanding
 	t.Run("ValueOf", func(t *testing.T) {
 
 		rt5 := reflect.ValueOf(TestOrderTypes(1))
@@ -74,7 +75,16 @@ func TestOrderTypesValues(t *testing.T) {
 			t.Log("reflect.ValueOf(TestOrderTypes(1)) and reflect.ValueOf(int64(1)) is not equal")
 		}
 
-		ok2 := assert.Equal(t, reflect.Kind(TestOrderTypes(1)), reflect.Kind(int64(1)))
+	})
+	t.Log("\n\n")
+
+	// reflect kind of order types
+	t.Run("Kind", func(t *testing.T) {
+
+		rt7 := reflect.Kind(TestOrderTypes(1))
+		rt8 := reflect.Kind(int64(1))
+
+		ok2 := assert.Equal(t, rt7, rt8)
 		if ok2 {
 			t.Log("reflect.Kind(TestOrderTypes(1)) and reflect.Kind(int64(1)) is equal")
 		}
