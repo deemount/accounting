@@ -34,7 +34,7 @@ func New() Acc {
 }
 
 // Init ...
-func Init() {
+func (acc *Accounting) Init() {
 
 	db := driver.NewDataService(*service.App.DB.Config)
 	idle, err := db.Connect()
@@ -46,7 +46,7 @@ func Init() {
 }
 
 // Create ...
-func (a *Accounting) Create(c []models.ExchangeOrder) error {
+func (acc *Accounting) Create(c []models.ExchangeOrder) error {
 
 	// assign error, created, index, blocks, query
 	var err error
@@ -72,7 +72,7 @@ func (a *Accounting) Create(c []models.ExchangeOrder) error {
 
 		/*NOT FINISHED*/
 
-		result := a.rewrite(otype, result, query, index)
+		result := acc.rewrite(otype, result, query, index)
 		mergo.Merge(wrap[index], result)
 
 		if which == 0 {

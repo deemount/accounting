@@ -6,8 +6,9 @@
 	],
 	"settings": {
 		/*"swaggerViewer.defaultHost": "localhost",
-		"swaggerViewer.defaultPort": 18512,
-		"terminal.integrated.fontFamily": "Menlo for Powerline",*/
+		"swaggerViewer.defaultPort": 18512,*/
+		"terminal.integrated.fontFamily": "MesloLGS NF",
+		"terminal.integrated.cursorBlinking": true,
 		"workbench.sideBar.location": "left",
 		"workbench.colorCustomizations": {
 			"window.activeBorder": "#31a11b",
@@ -27,7 +28,6 @@
 			"statusBarItem.hoverBackground": "#3ecd22",
 			"titleBar.activeForeground": "#e7e7e7"
 		},
-		"terminal.integrated.cursorBlinking": true,
 		"material-icon-theme.folders.color": "#90a4ae",
 		"go.useLanguageServer": true,
 		"go.alternateTools": {
@@ -41,7 +41,6 @@
 				"source.fixAll.markdownlint": true
 			}
 		},
-		/*"peacock.color": "#31a11b"*/
 	},
 	"launch": {
 		"version": "0.2.0",

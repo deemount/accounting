@@ -2,11 +2,77 @@ package tests
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
+	"math"
 	"reflect"
+	"strconv"
 	"testing"
+	"unsafe"
 
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
+)
+
+// TestExchangeOrder ...
+type TestExchangeOrder struct {
+	ID         uuid.UUID `json:"id"`
+	CustomerID int64     `json:"customer_id"`
+	Type       string    `json:"type"`
+	Asset      string    `json:"asset"`
+}
+
+var (
+
+	// TestQueryMap ...
+	TestQueryMap []map[string]interface{}
+
+	// TestFixedNumberOfAdditionalSlices is number of wanted
+	// TestFixedNumberOfAdditionalSlices for each map in map slice
+	TestFixedNumberOfAdditionalSlices = 4
+
+	// TestDataStruct filled single struct for testing
+	TestDataStruct = TestExchangeOrder{
+		ID:         uuid.New(),
+		CustomerID: 1,
+		Type:       "buy",
+		Asset:      "EUR",
+	}
+
+	// TestDataStructSlice filled struct slice for testing
+	TestDataStructSlice = []TestExchangeOrder{
+		{
+			ID:         uuid.New(),
+			CustomerID: 1,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 2,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 3,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+		{
+			ID:         uuid.New(),
+			CustomerID: 4,
+			Type:       "buy",
+			Asset:      "EUR",
+		},
+	}
+
+	// TestNumberOfSlicesInTestStruct ...
+	TestNumberOfSlicesInTestStruct = len(TestDataStructSlice)
+
+	// TestCreatedSlices is number of all maps by multiplication
+	// of TestNumberOfSlicesInTestStruct and TestFixedNumberOfAdditionalSlices
+	TestCreatedSlices = TestNumberOfSlicesInTestStruct * TestFixedNumberOfAdditionalSlices
 )
 
 // TestOrderTypes ...
@@ -63,21 +129,6 @@ func TestOrderTypesValues(t *testing.T) {
 	})
 	t.Log("\n\n")
 
-	// reflect value of order types
-	// use case fails as given example for better understanding
-	t.Run("ValueOf", func(t *testing.T) {
-
-		rt5 := reflect.ValueOf(TestOrderTypes(1))
-		rt6 := reflect.ValueOf(int64(1))
-
-		ok1 := assert.Equal(t, rt5, rt6)
-		if !ok1 {
-			t.Log("reflect.ValueOf(TestOrderTypes(1)) and reflect.ValueOf(int64(1)) is not equal")
-		}
-
-	})
-	t.Log("\n\n")
-
 	// reflect kind of order types
 	t.Run("Kind", func(t *testing.T) {
 
@@ -102,7 +153,7 @@ func TestStruct2Map(t *testing.T) {
 
 		q1 := make(map[string]interface{}, 1)
 
-		bytes, _ := json.Marshal(&testDataStruct)
+		bytes, _ := json.Marshal(&TestDataStruct)
 		json.Unmarshal(bytes, &q1)
 
 		t.Logf("Single: %+v", q1)
@@ -113,9 +164,9 @@ func TestStruct2Map(t *testing.T) {
 	//
 	t.Run("Many", func(t *testing.T) {
 
-		q2 := make([]map[string]interface{}, testNumberOfSlicesInTestStruct)
+		q2 := make([]map[string]interface{}, TestNumberOfSlicesInTestStruct)
 
-		bytes, _ := json.Marshal(&testDataStructSlice)
+		bytes, _ := json.Marshal(&TestDataStructSlice)
 		json.Unmarshal(bytes, &q2)
 
 		t.Logf("Many: %v", q2)
@@ -130,7 +181,7 @@ func TestMakeMaps(t *testing.T) {
 
 	t.Run("Many", func(t *testing.T) {
 
-		emptyMaps := make([]map[string]interface{}, testNumberOfSlicesInTestStruct)
+		emptyMaps := make([]map[string]interface{}, TestNumberOfSlicesInTestStruct)
 		t.Logf("%v", emptyMaps)
 
 	})
@@ -144,12 +195,12 @@ func TestAppendStructSlice(t *testing.T) {
 	t.Run("Show", func(t *testing.T) {
 
 		// is the position of current map, starting at 0
-		testZeroIntegerIndex := 0
-		result := make([]TestExchangeOrder, testCreatedSlices)
-		for i := 0; i < testCreatedSlices; i++ {
+		TestZeroIntegerIndex := 0
+		result := make([]TestExchangeOrder, TestCreatedSlices)
+		for i := 0; i < TestCreatedSlices; i++ {
 			if i%4 == 0 {
-				result[i] = testDataStructSlice[testZeroIntegerIndex]
-				testZeroIntegerIndex++
+				result[i] = TestDataStructSlice[TestZeroIntegerIndex]
+				TestZeroIntegerIndex++
 			}
 		}
 
@@ -168,16 +219,16 @@ func TestAppendMapSlice(t *testing.T) {
 
 	t.Run("Show", func(t *testing.T) {
 
-		b, _ := json.Marshal(&testDataStructSlice)
-		json.Unmarshal(b, &testQueryMap)
+		b, _ := json.Marshal(&TestDataStructSlice)
+		json.Unmarshal(b, &TestQueryMap)
 
 		// is the position of current map, starting at 0
-		testZeroIntegerIndex := 0
-		result := make([]map[string]interface{}, testCreatedSlices)
-		for i := 0; i < testCreatedSlices; i++ {
-			if i%testFixedNumberOfAdditionalSlices == 0 {
-				result[i] = testQueryMap[testZeroIntegerIndex]
-				testZeroIntegerIndex++
+		TestZeroIntegerIndex := 0
+		result := make([]map[string]interface{}, TestCreatedSlices)
+		for i := 0; i < TestCreatedSlices; i++ {
+			if i%TestFixedNumberOfAdditionalSlices == 0 {
+				result[i] = TestQueryMap[TestZeroIntegerIndex]
+				TestZeroIntegerIndex++
 			}
 		}
 
@@ -196,27 +247,32 @@ func TestAppendRewriteMapSlice(t *testing.T) {
 
 	t.Run("Slice", func(t *testing.T) {
 
-		b, _ := json.Marshal(&testDataStructSlice)
-		json.Unmarshal(b, &testQueryMap)
+		b, _ := json.Marshal(&TestDataStructSlice)
+		json.Unmarshal(b, &TestQueryMap)
 
 		// is the position of current map, starting at 0
-		testZeroIntegerIndex := 0
-		result := make([]map[string]interface{}, testCreatedSlices)
-		for i := 0; i < testCreatedSlices; i++ {
-			which := i % testFixedNumberOfAdditionalSlices
+		TestZeroIntegerIndex := 0
+
+		//
+		result := make([]map[string]interface{}, TestCreatedSlices)
+
+		//
+		for i := 0; i < TestCreatedSlices; i++ {
+			which := i % TestFixedNumberOfAdditionalSlices
+			otype := TestOrderTypes(which).String()
 			if which == 0 {
-				result[i] = testQueryMap[testZeroIntegerIndex]
-				result[i]["type"] = TestOrderTypes(which).String()
-				testZeroIntegerIndex++
+				result[i] = TestQueryMap[TestZeroIntegerIndex]
+				result[i]["type"] = otype
+				TestZeroIntegerIndex++
 			} else {
 				result[i] = map[string]interface{}{
-					"customer_id": testQueryMap[testZeroIntegerIndex-1]["customer_id"],
-					"id":          testQueryMap[testZeroIntegerIndex-1]["id"],
-					"type":        TestOrderTypes(which).String(),
+					"customer_id": TestQueryMap[TestZeroIntegerIndex-1]["customer_id"],
+					"id":          TestQueryMap[TestZeroIntegerIndex-1]["id"],
+					"type":        otype,
 					"asset":       "EUR",
 				}
 			}
-			t.Logf("%d of %d (l:%d)", i, testCreatedSlices, len(result[i]))
+			t.Logf("%d of %d (l:%d)", i, TestCreatedSlices, len(result[i]))
 			ShowSize(result[i])
 		}
 
@@ -227,16 +283,35 @@ func TestAppendRewriteMapSlice(t *testing.T) {
 func TestAll(t *testing.T) {
 
 	// is the position of current map, starting at 0
-	testZeroIntegerIndex := 0
-	for testZeroIntegerIndex < testCreatedSlices {
-		which := testZeroIntegerIndex % testFixedNumberOfAdditionalSlices
-		//otype := TestOrderTypes(which).String()
-		//t.Logf("%d (of %d) mod %d = %s(%d)", testZeroIntegerIndex, testCreatedSlices, testFixedNumberOfAdditionalSlices, otype, which)
-		//MockRewrite(otype, result, testQueryMap, testZeroIntegerIndex)
+	TestZeroIntegerIndex := 0
+
+	//
+	i := 0
+
+	//
+	result := make([]map[string]interface{}, TestCreatedSlices)
+
+	//
+	for TestZeroIntegerIndex < TestCreatedSlices {
+		which := TestZeroIntegerIndex % TestFixedNumberOfAdditionalSlices
+		//t.Logf("%d (of %d) mod %d = %s(%d)", TestZeroIntegerIndex, TestCreatedSlices, TestFixedNumberOfAdditionalSlices, otype, which)
+		otype := TestOrderTypes(which).String()
 		if which == 0 {
-			which++
+			result[i] = TestQueryMap[TestZeroIntegerIndex]
+			result[i]["type"] = otype
+			TestZeroIntegerIndex++
+		} else {
+			result[i] = map[string]interface{}{
+				"customer_id": TestQueryMap[TestZeroIntegerIndex-1]["customer_id"],
+				"id":          TestQueryMap[TestZeroIntegerIndex-1]["id"],
+				"type":        otype,
+				"asset":       "EUR",
+			}
 		}
-		testZeroIntegerIndex++
+		t.Logf("%d of %d (l:%d)", i, TestCreatedSlices, len(result[i]))
+		ShowSize(result[i])
+		//MockRewrite(otype, result, TestQueryMap, TestZeroIntegerIndex)
+		i++
 	}
 
 }
@@ -246,7 +321,7 @@ func MockRewrite(o string, r []map[string]interface{}, q []map[string]interface{
 
 	for k, v := range r[i] {
 
-		log.Printf("testZeroIntegerIndex(%d):OPTYPE(%s):KEY(%s):VALUE(%v)", i, o, k, v)
+		log.Printf("TestZeroIntegerIndex(%d):OPTYPE(%s):KEY(%s):VALUE(%v)", i, o, k, v)
 
 		// for str, val := range v {
 
@@ -274,20 +349,107 @@ func TestForLoopWithOrderTypes(t *testing.T) {
 	t.Run("Results", func(t *testing.T) {
 
 		// is the position of current map, starting at 0
-		testZeroIntegerIndex := 0
-		for testZeroIntegerIndex < testCreatedSlices {
+		TestZeroIntegerIndex := 0
+		for TestZeroIntegerIndex < TestCreatedSlices {
 
-			which := testZeroIntegerIndex % testFixedNumberOfAdditionalSlices
-			t.Logf("%d:%s", testZeroIntegerIndex, TestOrderTypes(which).String())
+			which := TestZeroIntegerIndex % TestFixedNumberOfAdditionalSlices
+			t.Logf("%d:%s", TestZeroIntegerIndex, TestOrderTypes(which).String())
 
 			if which == 0 {
 				which++
 			}
 
-			testZeroIntegerIndex++
+			TestZeroIntegerIndex++
 
 		}
 
 	})
 
+}
+
+// is a string array, with the capacity of 5, holding suffixes
+// (Bytes, KB, MB, GB, TB) for given calculated values
+var suffixes [5]string
+
+// GetSliceHeader inspecting the header values of each slice
+func GetSliceHeader(slice *interface{}) string {
+	sh := (*reflect.SliceHeader)(unsafe.Pointer(slice))
+	return fmt.Sprintf("%+v", sh)
+}
+
+// GetSize obtains the size of v using reflect and then, for the supported types
+// (slices, maps, strings, and structs), it computes the memory required by the content
+// stored in them. You would need to add here other types that you need to support.
+//
+// There are a few details to work out:
+// - Private fields are not counted.
+// - For structs we are double-counting the basic types.
+//
+// For number two, filter them out before doing the recursive call when handling structs,
+// also check the kinds in the documentation for the reflect package.
+func GetSize(v interface{}) int {
+
+	size := int(reflect.TypeOf(v).Size())
+
+	switch reflect.TypeOf(v).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(v)
+		for i := 0; i < s.Len(); i++ {
+			size += GetSize(s.Index(i).Interface())
+		}
+
+	case reflect.Map:
+
+		s := reflect.ValueOf(v)
+		keys := s.MapKeys()
+		size += int(float64(len(keys)) * 10.79) // approximation from https://golang.org/src/runtime/hashmap.go
+		for i := range keys {
+			size += GetSize(keys[i].Interface()) + GetSize(s.MapIndex(keys[i]).Interface())
+		}
+
+	case reflect.String:
+		size += reflect.ValueOf(v).Len()
+
+	case reflect.Struct:
+		s := reflect.ValueOf(v)
+		for i := 0; i < s.NumField(); i++ {
+			if s.Field(i).CanInterface() {
+				size += GetSize(s.Field(i).Interface())
+			}
+		}
+
+	}
+	return size
+}
+
+// ShowSize ...
+func ShowSize(result interface{}) {
+
+	suffixes[0] = "Bytes"
+	suffixes[1] = "KB"
+	suffixes[2] = "MB"
+	suffixes[3] = "GB"
+	suffixes[4] = "TB"
+
+	size, _ := strconv.ParseFloat(strconv.Itoa(GetSize(result)), 64)
+	base := math.Log(size) / math.Log(1024)
+	getSize := Round(math.Pow(1024, base-math.Floor(base)), .5, 2)
+	getSuffix := suffixes[int(math.Floor(base))]
+	log.Printf(strconv.FormatFloat(getSize, 'f', -1, 64) + " " + string(getSuffix))
+
+}
+
+// Round ...
+func Round(val float64, roundOn float64, places int) (newVal float64) {
+	var round float64
+	pow := math.Pow(10, float64(places))
+	digit := pow * val
+	_, div := math.Modf(digit)
+	if div >= roundOn {
+		round = math.Ceil(digit)
+	} else {
+		round = math.Floor(digit)
+	}
+	newVal = round / pow
+	return
 }

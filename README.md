@@ -5,10 +5,11 @@ with different order types.
 
 ## Introduction ##
 
-Creating different types of lists for ExchangeOrders by quering transactions and
-customer data in a PostgreSQL Database.
+Creating different types of lists for exchange orders by quering transactions and
+customer data in a PostgreSQL Database. This combination is mostly used on transactions
+with ATM's
 
-The Exchange Order Types are:
+The Exchange Order Types, within a transaction, are:
 
 * withdrawal:0
 * buy:1
