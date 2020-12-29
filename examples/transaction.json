@@ -1,0 +1,7 @@
+{
+    "customerID": 1,
+    "transactionID": "88a818b6-264a-4e6d-ab5c-70c63f755ffa",
+    "type": "buy",
+    "asset": "EUR",
+    "sum": 100.00
+}

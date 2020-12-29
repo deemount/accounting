@@ -14,7 +14,7 @@ Following functions below for testing different units are installed:
 * TestAppendStructSlice
 * TestAppendMapSlice
 * TestAppendRewriteMapSlice
-* TestAll
+* TestCreate
 
 #### TestOrderTypesValues ####
 
