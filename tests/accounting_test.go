@@ -8,30 +8,58 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 	"unsafe"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/assert"
 )
 
-// TestExchangeOrder ...
+/*
+  Test management, I
+  modeling data
+*/
+
+// TestExchangeOrder represents the model of a reporting list
 type TestExchangeOrder struct {
-	TransactionID uuid.UUID `json:"id"`
-	CustomerID    int64     `json:"customer_id"`
-	Type          string    `json:"type"`
-	Asset         string    `json:"asset"`
+	TransactionID       uuid.UUID       `json:"transactionID"`
+	TransactionDateTime time.Time       `json:"transactionDateTime"`
+	CustomerID          int64           `json:"customerID"`
+	Type                string          `json:"type"`
+	Asset               string          `json:"asset"`
+	Currency            string          `json:"currency"`
+	Deposit             decimal.Decimal `json:"deposit"`
 }
 
+/*
+  Test management, II
+  implementing different kind of test data
+*/
+
+// untyped constant
+const (
+	testLayoutISO = time.RFC3339
+	// testFixedNumberOfOrderTypes is also the number of wanted
+	// maps for each query result
+	testFixedNumberOfOrderTypes = 4
+)
+
+// assigned variables
 var (
 
-	// TestQueryMap ...
+	// create date time format for testing
+	testNow         = time.Now()
+	testFormat      = testNow.Format(testLayoutISO)
+	testDateTime, _ = time.Parse(testLayoutISO, testFormat)
+
+	// TestQueryMap
 	TestQueryMap []map[string]interface{}
 
-	// TestFixedNumberOfAdditionalSlices is number of wanted
-	// TestFixedNumberOfAdditionalSlices for each map in map slice
-	TestFixedNumberOfAdditionalSlices = 4
+	// TestMapExchangeOrder
+	TestMapExchangeOrder []map[string]TestExchangeOrder
 
-	// TestDataStruct filled single struct for testing
+	// TestDataStruct is a filled single struct type for testing
 	TestDataStruct = TestExchangeOrder{
 		TransactionID: uuid.New(),
 		CustomerID:    1,
@@ -39,69 +67,86 @@ var (
 		Asset:         "EUR",
 	}
 
-	// TestDataStructSlice filled struct slice for testing
+	// TestDataStructSlice is a filled struct slice for testing
 	TestDataStructSlice = []TestExchangeOrder{
 		{
-			TransactionID: uuid.New(),
-			CustomerID:    1,
-			Type:          "buy",
-			Asset:         "EUR",
+			TransactionID:       uuid.New(),
+			TransactionDateTime: testDateTime,
+			CustomerID:          1,
+			Type:                "buy",
+			Asset:               "BTC",
+			Currency:            "EUR",
 		},
 		{
-			TransactionID: uuid.New(),
-			CustomerID:    2,
-			Type:          "buy",
-			Asset:         "EUR",
+			TransactionID:       uuid.New(),
+			TransactionDateTime: testDateTime,
+			CustomerID:          2,
+			Type:                "buy",
+			Asset:               "BTC",
+			Currency:            "EUR",
 		},
 		{
-			TransactionID: uuid.New(),
-			CustomerID:    3,
-			Type:          "buy",
-			Asset:         "EUR",
+			TransactionID:       uuid.New(),
+			TransactionDateTime: testDateTime,
+			CustomerID:          3,
+			Type:                "buy",
+			Asset:               "BTC",
+			Currency:            "EUR",
 		},
 		{
-			TransactionID: uuid.New(),
-			CustomerID:    4,
-			Type:          "buy",
-			Asset:         "EUR",
+			TransactionID:       uuid.New(),
+			TransactionDateTime: testDateTime,
+			CustomerID:          4,
+			Type:                "buy",
+			Asset:               "BTC",
+			Currency:            "EUR",
 		},
 	}
 
-	// TestNumberOfSlicesInTestStruct ...
+	// TestNumberOfSlicesInTestStruct
 	TestNumberOfSlicesInTestStruct = len(TestDataStructSlice)
 
 	// TestCreatedSlices is number of all maps by multiplication
-	// of TestNumberOfSlicesInTestStruct and TestFixedNumberOfAdditionalSlices
-	TestCreatedSlices = TestNumberOfSlicesInTestStruct * TestFixedNumberOfAdditionalSlices
+	// of TestNumberOfSlicesInTestStruct and testFixedNumberOfOrderTypes
+	TestCreatedSlices = TestNumberOfSlicesInTestStruct * testFixedNumberOfOrderTypes
 )
+
+/*
+  Test management, III
+  create common type
+*/
 
 // TestOrderTypes ...
 type TestOrderTypes int64
 
 const (
-	TestWithdrawal TestOrderTypes = iota
-	TestBuy
+	TestBuy TestOrderTypes = iota
+	TestWithdrawal
 	TestSpread
 	TestFee
 )
 
 // String return name of typed constants by given integer (0,1,2,3,4)
-func (testo TestOrderTypes) String() string {
+func (ot TestOrderTypes) String() string {
 
 	names := [...]string{
-		"withdrawal",
 		"buy",
 		"spread",
-		"fee"}
+		"fee",
+		"withdrawal",
+	}
 
-	if testo < TestWithdrawal || testo > TestFee {
+	if ot < TestBuy || ot > TestWithdrawal {
 		return "Unknown"
 	}
 
-	return names[testo]
+	return names[ot]
 }
 
-/**/
+/*
+  Test management, IV
+  testing functionalities
+*/
 
 // TestOrderTypesValues
 // cmd: go test -v accounting_test.go -run TestOrderTypesValues
@@ -109,10 +154,10 @@ func TestOrderTypesValues(t *testing.T) {
 
 	// show integer values of types
 	t.Run("Results", func(t *testing.T) {
-		t.Logf("Withdrawal: %v\n", TestOrderTypes(0))
-		t.Logf("Buy: %v\n", TestOrderTypes(1))
-		t.Logf("Spread: %v\n", TestOrderTypes(2))
-		t.Logf("Fee: %v\n", TestOrderTypes(3))
+		t.Logf("Buy: %v\n", TestOrderTypes(0))
+		t.Logf("Spread: %v\n", TestOrderTypes(1))
+		t.Logf("Fee: %v\n", TestOrderTypes(2))
+		t.Logf("Withdrawal: %v\n", TestOrderTypes(3))
 	})
 	t.Log("\n\n")
 
@@ -226,7 +271,7 @@ func TestAppendMapSlice(t *testing.T) {
 		TestZeroIndexQueryMap := 0
 		result := make([]map[string]interface{}, TestCreatedSlices)
 		for i := 0; i < TestCreatedSlices; i++ {
-			if i%TestFixedNumberOfAdditionalSlices == 0 {
+			if i%testFixedNumberOfOrderTypes == 0 {
 				result[i] = TestQueryMap[TestZeroIndexQueryMap]
 				TestZeroIndexQueryMap++
 			}
@@ -253,12 +298,11 @@ func TestAppendRewriteMapSlice(t *testing.T) {
 		// is the position of current map, starting at 0
 		TestZeroIndexQueryMap := 0
 
-		//
 		result := make([]map[string]interface{}, TestCreatedSlices)
 
 		//
 		for i := 0; i < TestCreatedSlices; i++ {
-			which := i % TestFixedNumberOfAdditionalSlices
+			which := i % testFixedNumberOfOrderTypes
 			otype := TestOrderTypes(which).String()
 			if which == 0 {
 				result[i] = TestQueryMap[TestZeroIndexQueryMap]
@@ -298,9 +342,9 @@ func TestCreate(t *testing.T) {
 
 	//
 	for i < TestCreatedSlices {
-		which := i % TestFixedNumberOfAdditionalSlices
+		which := i % testFixedNumberOfOrderTypes
 		otype := TestOrderTypes(which).String()
-		t.Logf("%d (of %d) mod %d = %s(%d)", TestZeroIndexQueryMap, TestCreatedSlices, TestFixedNumberOfAdditionalSlices, otype, which)
+		t.Logf("%d (of %d) mod %d = %s(%d)", TestZeroIndexQueryMap, TestCreatedSlices, testFixedNumberOfOrderTypes, otype, which)
 		if which == 0 {
 			t.Logf("QMINDEX(0): %d", TestZeroIndexQueryMap)
 			result[i] = TestQueryMap[TestZeroIndexQueryMap]
@@ -361,7 +405,7 @@ func TestForLoopWithOrderTypes(t *testing.T) {
 		TestZeroIndexQueryMap := 0
 		for TestZeroIndexQueryMap < TestCreatedSlices {
 
-			which := TestZeroIndexQueryMap % TestFixedNumberOfAdditionalSlices
+			which := TestZeroIndexQueryMap % testFixedNumberOfOrderTypes
 			t.Logf("%d:%s", TestZeroIndexQueryMap, TestOrderTypes(which).String())
 
 			if which == 0 {
@@ -375,6 +419,11 @@ func TestForLoopWithOrderTypes(t *testing.T) {
 	})
 
 }
+
+/*
+  Test management, V
+  add utilities
+*/
 
 // is a string array, with the capacity of 5, holding suffixes
 // (Bytes, KB, MB, GB, TB) for given calculated values

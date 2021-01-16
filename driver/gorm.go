@@ -37,7 +37,7 @@ func (db *DataService) Connect() (*DataService, error) {
 
 	db.ORM, err = gorm.Open(postgres.New(
 		postgres.Config{
-			DSN:                  "user=salvo password=pdfx34 dbname=accounting port=9920 sslmode=disable TimeZone=Europe/Berlin",
+			DSN:                  "user=xxx password=xxx dbname=accounting port=5432 sslmode=disable TimeZone=Europe/Berlin",
 			PreferSimpleProtocol: true, // disables implicit prepared statement usage
 		}), db.config())
 
