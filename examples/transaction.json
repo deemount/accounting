@@ -1,7 +1,11 @@
-{
-    "customerID": 1,
-    "transactionID": "88a818b6-264a-4e6d-ab5c-70c63f755ffa",
-    "type": "buy",
-    "asset": "EUR",
-    "sum": 100.00
-}
+[
+    {
+        "transactionID": "88a818b6-264a-4e6d-ab5c-70c63f755ffa",
+        "transactionDateTime": "2020-10-03T08:15:30.000000001Z01:00",
+        "customerID": 1,
+        "type": "buy",
+        "asset": "BTC",
+        "currency": "EUR",
+        "deposit": 100.00
+    }
+]
