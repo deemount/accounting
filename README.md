@@ -34,7 +34,14 @@ go get -u gorm.io/driver/postgres
 
 ```
 
+### History ###
+
+* make it public (2020-01-16)
+* first uploads & initial commits ()
+
 ### To Do's ###
 
+* more and better documentation
+* build new architecture using best practices
 * add database driver (GORM)
 * add calculations to the list for spread, fee and withdrawal
