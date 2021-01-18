@@ -224,12 +224,8 @@ func TestStruct2Map(t *testing.T) {
 // cmd: go test -v accounting_test.go -run TestMakeMaps
 func TestMakeMaps(t *testing.T) {
 
-	t.Run("Many", func(t *testing.T) {
-
-		emptyMaps := make([]map[string]interface{}, TestNumberOfSlicesInTestStruct)
-		t.Logf("%v", emptyMaps)
-
-	})
+	emptyMaps := make([]map[string]interface{}, TestNumberOfSlicesInTestStruct)
+	t.Logf("%v", emptyMaps)
 
 }
 
@@ -237,24 +233,20 @@ func TestMakeMaps(t *testing.T) {
 // cmd: go test -v accounting_test.go -run TestAppendStructSlice
 func TestAppendStructSlice(t *testing.T) {
 
-	t.Run("Show", func(t *testing.T) {
-
-		// is the position of current map, starting at 0
-		TestZeroIndexQueryMap := 0
-		result := make([]TestExchangeOrder, TestCreatedSlices)
-		for i := 0; i < TestCreatedSlices; i++ {
-			if i%4 == 0 {
-				result[i] = TestDataStructSlice[TestZeroIndexQueryMap]
-				TestZeroIndexQueryMap++
-			}
+	// is the position of current map, starting at 0
+	TestZeroIndexQueryMap := 0
+	result := make([]TestExchangeOrder, TestCreatedSlices)
+	for i := 0; i < TestCreatedSlices; i++ {
+		if i%4 == 0 {
+			result[i] = TestDataStructSlice[TestZeroIndexQueryMap]
+			TestZeroIndexQueryMap++
 		}
+	}
 
-		ShowSize(result)
-		t.Logf("%d:%d", len(result), cap(result))
-		b, _ := json.MarshalIndent(result, " ", "   ")
-		t.Logf("%v", string(b))
-
-	})
+	ShowSize(result)
+	t.Logf("%d:%d", len(result), cap(result))
+	b, _ := json.MarshalIndent(result, " ", "   ")
+	t.Logf("%v", string(b))
 
 }
 
@@ -262,27 +254,23 @@ func TestAppendStructSlice(t *testing.T) {
 // cmd: go test -v accounting_test.go -run TestAppendMapSlice
 func TestAppendMapSlice(t *testing.T) {
 
-	t.Run("Show", func(t *testing.T) {
+	b, _ := json.Marshal(&TestDataStructSlice)
+	json.Unmarshal(b, &TestQueryMap)
 
-		b, _ := json.Marshal(&TestDataStructSlice)
-		json.Unmarshal(b, &TestQueryMap)
-
-		// is the position of current map, starting at 0
-		TestZeroIndexQueryMap := 0
-		result := make([]map[string]interface{}, TestCreatedSlices)
-		for i := 0; i < TestCreatedSlices; i++ {
-			if i%testFixedNumberOfOrderTypes == 0 {
-				result[i] = TestQueryMap[TestZeroIndexQueryMap]
-				TestZeroIndexQueryMap++
-			}
+	// is the position of current map, starting at 0
+	TestZeroIndexQueryMap := 0
+	result := make([]map[string]interface{}, TestCreatedSlices)
+	for i := 0; i < TestCreatedSlices; i++ {
+		if i%testFixedNumberOfOrderTypes == 0 {
+			result[i] = TestQueryMap[TestZeroIndexQueryMap]
+			TestZeroIndexQueryMap++
 		}
+	}
 
-		ShowSize(result)
-		t.Logf("%d:%d", len(result), cap(result))
-		b1, _ := json.MarshalIndent(result, " ", "   ")
-		t.Logf("%v", string(b1))
-
-	})
+	ShowSize(result)
+	t.Logf("%d:%d", len(result), cap(result))
+	b1, _ := json.MarshalIndent(result, " ", "   ")
+	t.Logf("%v", string(b1))
 
 }
 
@@ -290,37 +278,33 @@ func TestAppendMapSlice(t *testing.T) {
 // cmd: go test -v ./tests/accounting_test.go -run TestAppendRewriteMapSlice
 func TestAppendRewriteMapSlice(t *testing.T) {
 
-	t.Run("Slice", func(t *testing.T) {
+	b, _ := json.Marshal(&TestDataStructSlice)
+	json.Unmarshal(b, &TestQueryMap)
 
-		b, _ := json.Marshal(&TestDataStructSlice)
-		json.Unmarshal(b, &TestQueryMap)
+	// is the position of current map, starting at 0
+	TestZeroIndexQueryMap := 0
 
-		// is the position of current map, starting at 0
-		TestZeroIndexQueryMap := 0
+	result := make([]map[string]interface{}, TestCreatedSlices)
 
-		result := make([]map[string]interface{}, TestCreatedSlices)
-
-		//
-		for i := 0; i < TestCreatedSlices; i++ {
-			which := i % testFixedNumberOfOrderTypes
-			otype := TestOrderTypes(which).String()
-			if which == 0 {
-				result[i] = TestQueryMap[TestZeroIndexQueryMap]
-				result[i]["type"] = otype
-				TestZeroIndexQueryMap++
-			} else {
-				result[i] = map[string]interface{}{
-					"customer_id": TestQueryMap[TestZeroIndexQueryMap-1]["customer_id"],
-					"id":          TestQueryMap[TestZeroIndexQueryMap-1]["id"],
-					"type":        otype,
-					"asset":       "EUR",
-				}
+	//
+	for i := 0; i < TestCreatedSlices; i++ {
+		which := i % testFixedNumberOfOrderTypes
+		otype := TestOrderTypes(which).String()
+		if which == 0 {
+			result[i] = TestQueryMap[TestZeroIndexQueryMap]
+			result[i]["type"] = otype
+			TestZeroIndexQueryMap++
+		} else {
+			result[i] = map[string]interface{}{
+				"customer_id": TestQueryMap[TestZeroIndexQueryMap-1]["customer_id"],
+				"id":          TestQueryMap[TestZeroIndexQueryMap-1]["id"],
+				"type":        otype,
+				"asset":       "EUR",
 			}
-			t.Logf("%d of %d (l:%d)", i, TestCreatedSlices, len(result[i]))
-			ShowSize(result[i])
 		}
-
-	})
+		t.Logf("%d of %d (l:%d)", i, TestCreatedSlices, len(result[i]))
+		ShowSize(result[i])
+	}
 
 }
 
